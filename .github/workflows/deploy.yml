@@ -55,7 +55,7 @@ jobs:
       - name: Build and push image
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          ECR_REPOSITORY: biztrips-backend
+          ECR_REPOSITORY: refcard05-backend
         run: |
           IMAGE_TAG="$GITHUB_SHA"
           if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
@@ -130,7 +130,7 @@ jobs:
         with:
           task-definition: ${{ runner.temp }}/task-definition.json
           container-name: biztrips-backend
-          image: ${{ steps.ecr-login.outputs.registry }}/biztrips-backend:${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+          image: ${{ steps.ecr-login.outputs.registry }}/refcard05-backend:${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
 
       - name: Deploy ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
