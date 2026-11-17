@@ -1,16 +1,20 @@
 package ch.bbw.trips.repo;
 
 import ch.bbw.trips.ex.TriptNotFoundException;
+import ch.bbw.trips.storage.ProfilePictureStorage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +29,9 @@ public class EmployeeController {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private ProfilePictureStorage profilePictureStorage;
 
 	@PostMapping("/signIn")
 	@ResponseStatus(HttpStatus.OK)
@@ -72,6 +79,34 @@ public class EmployeeController {
 	@GetMapping("/employees/{id}")
 	Employee one(@PathVariable Long id) {
 		return employeeRepository.findById(id).orElseThrow(() -> new TriptNotFoundException(id));
+	}
+
+	@PostMapping(value = "/employees/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	ResponseEntity<Void> uploadProfilePicture(@PathVariable Long id, @RequestParam("file") MultipartFile file)
+			throws IOException {
+		Employee employee = employeeRepository.findById(id)
+				.orElseThrow(() -> new TriptNotFoundException(id));
+		String previousKey = employee.getProfilePictureKey();
+		ProfilePictureStorage.StoredPicture picture = profilePictureStorage.store(file);
+		employee.setProfilePictureKey(picture.key());
+		employee.setProfilePictureContentType(picture.contentType());
+		employeeRepository.save(employee);
+		if (previousKey != null) {
+			profilePictureStorage.delete(previousKey);
+		}
+		return ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/employees/{id}/photo")
+	ResponseEntity<byte[]> downloadProfilePicture(@PathVariable Long id) {
+		Employee employee = employeeRepository.findById(id)
+				.orElseThrow(() -> new TriptNotFoundException(id));
+		if (employee.getProfilePictureKey() == null) {
+			return ResponseEntity.notFound().build();
+		}
+		return ResponseEntity.ok()
+				.contentType(MediaType.parseMediaType(employee.getProfilePictureContentType()))
+				.body(profilePictureStorage.load(employee.getProfilePictureKey()));
 	}
 
 	@PutMapping("/employees/{id}")

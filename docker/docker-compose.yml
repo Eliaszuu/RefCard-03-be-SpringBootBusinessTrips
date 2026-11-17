@@ -3,18 +3,47 @@ services:
     image: mariadb
     container_name: bbw-mariadb-trips-dev
     environment:
-      - MYSQL_ROOT_PASSWORD=bbw123
-      - MYSQL_DATABASE=db_biztrips
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_DATABASE: db_biztrips
     ports:
       - "3306:3306"
     volumes:
       - ./database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   bbw-phpmyadmin-trips:
     depends_on:
-      - bbw-mariadb-trips-dev
+      bbw-mariadb-trips-dev:
+        condition: service_healthy
     image: phpmyadmin/phpmyadmin
     ports:
       - "8082:80"
     environment:
       PMA_HOST: bbw-mariadb-trips-dev
+
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    depends_on:
+      bbw-mariadb-trips-dev:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: mariadb
+      DB_HOST: bbw-mariadb-trips-dev
+      DB_PORT: 3306
+      DB_NAME: db_biztrips
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      APP_STORAGE_LOCATION: /app/uploads
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  uploads:

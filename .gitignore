@@ -37,3 +37,7 @@ build/
 
 ### Docker Compose local MariaDB data (regenerated on `docker compose up`) ###
 docker/database/
+
+# Local development secrets and uploaded files
+.env
+uploads/
