@@ -108,7 +108,7 @@ Die Backend-Pipeline soll das Spring-Boot-Backend bauen und testen, mit einem Mu
 
 Beide Images sollen strukturiert und nachvollziehbar versioniert werden. Die Git-Tags der Repositories müssen den jeweiligen Image-Tags in ECR zugeordnet werden können. Ein einheitliches Schema wie SemVer erleichtert den Vergleich der Frontend- und Backend-Versionen.
 
-**Noch ergänzen:** tatsächlich verwendetes Tag-Schema, Beispiel-Tags aus beiden Repositories und die dazugehörigen ECR-Image-Tags.
+![img_4.png](img_4.png)
 
 ## 4. AWS-Konfiguration und Deployment
 
@@ -122,7 +122,7 @@ Vorgesehen ist eine MariaDB-Instanz auf Amazon RDS in `us-east-1`. Das Backend e
 - Netzwerkzugriff / Sicherheitsgruppe: Zugriff nur vom Backend beziehungsweise dessen Netzwerk auf den MariaDB-Port (standardmässig 3306). **Noch ergänzen:** konkrete Sicherheitsgruppen-Regeln
 - Verbindungstest: **Noch ergänzen:** Testvorgehen und tatsächliches Ergebnis
 
-<!-- Noch ergänzen: Screenshot der RDS-Instanz ohne Passwörter oder andere sensible Daten. -->
+![img.png](img.png)
 
 ### 4.2 S3-Bilder-Storage und IAM
 
@@ -134,7 +134,7 @@ Der Bilder-Endpoint des Backends wird von lokaler Speicherung auf Amazon S3 umge
 - Least-Privilege-Berechtigungen: nur die für den Bilder-Workflow erforderlichen Aktionen auf dem konkreten Bucket beziehungsweise dessen Objekten. **Noch ergänzen:** tatsächliche Aktionen und Resource-ARNs der Policy
 - Fehlerfall: Fehler bei fehlenden Berechtigungen oder S3-Ausfällen sollen nachvollziehbar behandelt werden. **Noch ergänzen:** Verhalten und getestetes Ergebnis
 
-<!-- Noch ergänzen: Screenshot des S3-Buckets und der relevanten IAM-Policy ohne sensible Daten. -->
+![img_1.png](img_1.png)
 
 ### 4.3 ECS-Services
 
@@ -145,8 +145,7 @@ Der Bilder-Endpoint des Backends wird von lokaler Speicherung auf Amazon S3 umge
 
 Frontend und Backend laufen als zwei getrennte ECS-Services auf Fargate. Der Frontend-Service verwendet nginx, der Backend-Service Spring Boot. Die Image-Änderung soll für beide Services automatisiert ein Redeployment auslösen. **Noch ergänzen:** Cluster-/Service-Namen, Task-Definitionen, Ports, Ressourcen, Netzwerk-/Load-Balancer-Konfiguration, Health-Checks und der konkrete Mechanismus für den Redeploy.
 
-<!-- Noch ergänzen: Screenshot der laufenden ECS-Services und aktuellen Tasks. -->
-
+![img_5.png](img_5.png)
 ## 5. Secrets und AWS Academy Learner Lab
 
 Das Learner Lab stellt temporäre AWS-Zugangsdaten bereit. Diese werden als GitHub-Actions-Secrets gespeichert und von den Workflows für die AWS-Authentifizierung verwendet. In der Aufgabenstellung sind direkte Schlüssel für `aws-actions/configure-aws-credentials` vorgesehen, nicht `role-to-assume`. Session-Token und Schlüssel laufen ab und müssen nach Start einer neuen Lab-Session erneuert werden. Secret-Werte gehören weder in die Dokumentation noch in Quellcode, Commits oder Screenshots.
@@ -212,7 +211,9 @@ Die individuelle Umsetzung soll über Commits, Pull Requests und Workflow-Läufe
 
 ### Herausforderungen
 
-- Die temporären AWS-Zugangsdaten des Learner Labs laufen mit der Session ab und müssen erneuert werden. **Noch ergänzen:** ob dies während der Umsetzung aufgetreten ist und wie es gelöst wurde.
+- Die temporären AWS-Zugangsdaten des Learner Labs laufen mit der Session ab und müssen erneuert werden. Das haben wir gemerkt, als wir eine Woche später nochmals versucht haben, die Pipeline laufen zu lassen. Wir haben es gelöst, indem wir die Tokens aktualisiert haben.
+![img_3.png](img_3.png)
+
 - OIDC und das Erstellen eigener IAM-Rollen sind im Learner Lab eingeschränkt. **Noch ergänzen:** verwendete Konfiguration und weitere tatsächlich aufgetretene Probleme.
 
 ### Erkenntnisse
