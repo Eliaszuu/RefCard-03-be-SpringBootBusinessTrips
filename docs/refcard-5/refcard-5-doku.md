@@ -214,19 +214,20 @@ Die individuelle Umsetzung soll über Commits, Pull Requests und Workflow-Läufe
 - Die temporären AWS-Zugangsdaten des Learner Labs laufen mit der Session ab und müssen erneuert werden. Das haben wir gemerkt, als wir eine Woche später nochmals versucht haben, die Pipeline laufen zu lassen. Wir haben es gelöst, indem wir die Tokens aktualisiert haben.
 ![img_3.png](img_3.png)
 
-- OIDC und das Erstellen eigener IAM-Rollen sind im Learner Lab eingeschränkt. **Noch ergänzen:** verwendete Konfiguration und weitere tatsächlich aufgetretene Probleme.
+- OIDC und das Erstellen eigener IAM-Rollen sind im Learner Lab eingeschränkt. Die Backend-Pipeline verwendet deshalb temporäre Lab-Zugangsdaten aus GitHub-Secrets statt `role-to-assume`.
+- Die Pipeline wird bei `push` auf `main`, bei passenden Git-Tags `v*` und bei Pull Requests auf `main` ausgelöst. Pull Requests führen nur Build und Tests aus; Pushes und Tags lösen zusätzlich den ECR-Push und das ECS-Deployment aus.
+- Beim erneuten Anlegen einer Lab-Session können sowohl AWS-Zugangsdaten als auch die Weitergabe von ECS-/RDS-/S3-Konfigurationen ungültig werden. Variablen und Secrets müssen daher gemeinsam mit der Session geprüft und aktualisiert werden.
+- Der Repository-Stand enthält noch keine nachgewiesene Frontend-Pipeline und kein gemeinsames Compose-Setup für Frontend, Backend und MariaDB. Die vorhandene Compose-Datei startet nur Backend, MariaDB und phpMyAdmin.
+- Bei der Datenbankkonfiguration wurde eine Namensabweichung erkannt: Compose und ECS arbeiten mit `DB_USERNAME`, die MariaDB-Konfiguration liest aktuell `DB_USER`. Dadurch kann die Verbindung je nach eingesetztem Profil fehlschlagen, wenn die Variablen nicht zusätzlich angepasst werden.
 
 ### Erkenntnisse
 
-**Noch ergänzen:** persönliche Erkenntnisse aus CI/CD, AWS-Betrieb und lokalem Setup sowie mögliche Verbesserungen.
-
-## 10. Checkliste für die Abgabe
-
-- [ ] **Noch ergänzen:** Frontend- und Backend-Repository verlinken
-- [ ] **Noch ergänzen:** Docker-Compose-Verzeichnis verlinken (falls separat)
-- [ ] **Noch ergänzen:** beide Pipelines mit erfolgreichen Läufen dokumentieren
-- [ ] **Noch ergänzen:** Git-Tags und zugehörige ECR-Images nachweisen
-- [ ] **Noch ergänzen:** RDS, S3/IAM und beide ECS-Services mit Screenshots belegen
-- [ ] **Noch ergänzen:** lokalen Start mit Docker Compose testen und dokumentieren
-- [ ] **Noch ergänzen:** individuelle Beiträge mit Commits / PRs / Workflows belegen
-- [ ] Screenshots vor Abgabe auf Zugangsdaten, Tokens und Secret-Werte prüfen
+- **CI/CD trennt Prüfung und Deployment sinnvoll:** Maven-Test und Maven-Package laufen in einem eigenen `verify`-Job. Erst ein erfolgreicher Push kann den ECR-/ECS-Job starten. Das verhindert, dass Pull Requests Änderungen direkt in AWS veröffentlichen.
+- **Mehrere Image-Tags erhöhen die Nachvollziehbarkeit:** Der Workflow veröffentlicht den Commit-SHA als Tag, bei Git-Tags zusätzlich den Git-Tag und bei normalen Branch-Pushes ausserdem `latest`. Dadurch ist ein ECS-Deployment sowohl reproduzierbar als auch leicht zu identifizieren.
+- **Infrastrukturparameter gehören nicht in das Image:** Die Task-Definition wird erst in der Pipeline aus Variablen und Secrets ergänzt. RDS-Host, Datenbankname, Port und S3-Bucket werden als Umgebungseinstellungen gesetzt; Benutzername und Passwort werden über Secrets Manager-ARNs injiziert.
+- **Das Backend ist für MariaDB und S3 vorbereitet:** Das ECS-Deployment aktiviert `SPRING_PROFILES_ACTIVE=mariadb,s3`. Das Docker-Image enthält eine S3-Client-Konfiguration und einen eigenen Storage-Service für Profilbilder.
+- **Least Privilege ist durch eine konkrete Policy-Vorlage sichtbar:** Die Vorlage erlaubt auf Objekten unter `employee-photos/*` nur `GetObject`, `PutObject` und `DeleteObject`. Vor dem Einsatz muss der Platzhalter-Bucketname durch den tatsächlichen Bucket ersetzt werden.
+- **Docker-Images können schlank gehalten werden:** Das Backend verwendet einen Multi-Stage-Build mit JDK 21 für Maven und JRE 21 für die Laufzeit. Das Container-Image enthält dadurch keinen vollständigen Maven-Build-Toolchain.
+- **Compose hat einen klaren lokalen Zweck, aber noch nicht den vollständigen RefCard-05-Umfang:** Backend und Datenbank starten mit einem Health-Check sowie einem persistenten Upload-Volume. Die Frontend-Konfiguration und die gemeinsame Orchestrierung fehlen im aktuellen Backend-Repository.
+- **Konfiguration muss end-to-end konsistent geprüft werden:** Ein erfolgreiches Docker- oder Maven-Build sagt noch nichts über das ECS-Laufzeitverhalten aus. Besonders Datenbankvariablen, Secrets Manager-ARNs, Sicherheitsgruppen und Bucket-Berechtigungen müssen gemeinsam getestet werden.
+- **Geheimnisse müssen sichtbar geschützt bleiben:** Die Workflow-Datei verwendet Variablen und Secrets, enthält aber keine konkreten Schlüssel oder Kennwörter. Alle tatsächlichen Werte gehören in GitHub-Secrets beziehungsweise geschützte AWS-Konfiguration und nicht in Dokumentation oder Screenshots.
