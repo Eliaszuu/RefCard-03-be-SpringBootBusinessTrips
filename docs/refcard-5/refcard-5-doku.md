@@ -1,7 +1,5 @@
 # M324 – RefCard05: Full-Stack-Anwendung auf AWS
 
-> **Hinweis:** Die technischen Beschreibungen unten fassen die Aufgabenstellung zusammen. Wo konkrete Angaben zur Umsetzung fehlen, steht ausdrücklich **Noch ergänzen**. Zugangsdaten, Tokens und Secret-Werte niemals in diese Dokumentation oder in Git einfügen.
-
 ## 1. Überblick
 
 **Projekt:** RefCard05 – Full-Stack-Anwendung auf AWS  
@@ -72,37 +70,32 @@ Die durchgezogenen Pfeile zeigen Daten- und Deployment-Flüsse. Gestrichelte Pfe
 
 ## 2. Repositories und Zuständigkeiten
 
-| Bereich | Repository | Zuständigkeit / wichtige Inhalte |
-|---|---|---|
-| Frontend | https://github.com/Eliaszuu/refcard-03-fe-react-vite | React/Vite-Frontend, Vite-Build hinter nginx, Dockerfile und eigene GitHub-Actions-Pipeline |
+| Bereich | Repository                                                        | Zuständigkeit / wichtige Inhalte |
+|---|-------------------------------------------------------------------|---|
+| Frontend | https://github.com/Eliaszuu/refcard-03-fe-react-vite              | React/Vite-Frontend, Vite-Build hinter nginx, Dockerfile und eigene GitHub-Actions-Pipeline |
 | Backend | https://github.com/Eliaszuu/RefCard-03-be-SpringBootBusinessTrips | Spring-Boot-Backend, Multi-Stage-Dockerfile (Maven-Build und JRE-Laufzeit), eigene Pipeline; Anbindung an RDS und S3 |
-| Docker Compose | **Noch ergänzen:** Verzeichnis oder Repository-Link (falls separat) | Gemeinsamer lokaler Start von Frontend, Backend und MariaDB |
+| Docker Compose | Im Backend Repo                                                   | Gemeinsamer lokaler Start von Frontend, Backend und MariaDB |
 
-Die beiden Repositories werden unabhängig voneinander gebaut und veröffentlicht. Das Frontend spricht das Backend über dessen API an. **Noch ergänzen:** konkrete Repository-Namen und -Links sowie die Zuordnung der Arbeiten zu Lorenz und Elias.
+Die beiden Repositories werden unabhängig voneinander gebaut und veröffentlicht. Das Frontend spricht das Backend über dessen API an. 
 
 ## 3. CI/CD und Versionierung
 
 ### 3.1 Frontend-Pipeline
 
-Die Frontend-Pipeline soll das Frontend bauen und testen, den Vite-Build für nginx in ein Docker-Image verpacken und das Image in das eigene ECR-Repository pushen. Die Backend-URL muss beim Frontend-Build als `VITE_API_BASE_URL` konfiguriert werden. **Noch ergänzen:** tatsächlicher Workflow-Auslöser und die genauen Schritte aus der Workflow-Datei.
+Die Frontend-Pipeline soll das Frontend bauen und testen, den Vite-Build für nginx in ein Docker-Image verpacken und das Image in das eigene ECR-Repository pushen. Die Backend-URL muss beim Frontend-Build als `VITE_API_BASE_URL` konfiguriert werden.
 
-- Workflow-Datei: **Noch ergänzen:** Pfad im Frontend-Repository
-- ECR-Repository: **Noch ergänzen:** Name und Link
-- Image-Tagging: Git-Tags sollen nachvollziehbar auf die Image-Version abgebildet werden. **Noch ergänzen:** verwendetes Schema und tatsächliches Beispiel
-- Ergebnis / letzter erfolgreicher Lauf: **Noch ergänzen:** Link zum Workflow-Lauf
+- Workflow-Datei
+- ECR-Repository: 851725204375.dkr.ecr.us-east-1.amazonaws.com/refcard05-frontend
+- Image-Tagging: Git-Tags sollen nachvollziehbar auf die Image-Version abgebildet werden.
 
-<!-- Noch ergänzen: Screenshot eines erfolgreichen Frontend-Workflow-Laufs und des zugehörigen ECR-Images. -->
 
 ### 3.2 Backend-Pipeline
 
-Die Backend-Pipeline soll das Spring-Boot-Backend bauen und testen, mit einem Multi-Stage-Dockerfile ein Laufzeit-Image (Maven-Build und JRE) erstellen und in das eigene ECR-Repository pushen. **Noch ergänzen:** tatsächlicher Workflow-Auslöser und genaue Schritte aus der Workflow-Datei.
+Die Backend-Pipeline soll das Spring-Boot-Backend bauen und testen, mit einem Multi-Stage-Dockerfile ein Laufzeit-Image (Maven-Build und JRE) erstellen und in das eigene ECR-Repository pushen. 
 
-- Workflow-Datei: **Noch ergänzen:** Pfad im Backend-Repository
-- ECR-Repository: **Noch ergänzen:** Name und Link
-- Image-Tagging: gleiches nachvollziehbares Grundschema wie beim Frontend. **Noch ergänzen:** tatsächlich verwendete Tags
-- Ergebnis / letzter erfolgreicher Lauf: **Noch ergänzen:** Link zum Workflow-Lauf
-
-<!-- Noch ergänzen: Screenshot eines erfolgreichen Backend-Workflow-Laufs und des zugehörigen ECR-Images. -->
+- Workflow-Datei
+- ECR-Repository: 851725204375.dkr.ecr.us-east-1.amazonaws.com/refcard05-backend
+- Image-Tagging: gleiches nachvollziehbares Grundschema wie beim Frontend.
 
 ### 3.3 Git-Tags und Image-Versionen
 
@@ -116,11 +109,10 @@ Beide Images sollen strukturiert und nachvollziehbar versioniert werden. Die Git
 
 Vorgesehen ist eine MariaDB-Instanz auf Amazon RDS in `us-east-1`. Das Backend erhält Host, Port, Datenbankname und Benutzer über Konfiguration beziehungsweise Umgebungsvariablen; Passwörter werden nicht in den Quellcode geschrieben. Der Datenbankzugriff soll auf das Backend beschränkt sein.
 
-- RDS-Instanz: **Noch ergänzen:** Instanzname und Screenshot/Link
-- Datenbankname: **Noch ergänzen:** tatsächlich verwendeter Name
-- Verbindungskonfiguration: Host, Port, Datenbankname und Benutzer; Kennwort als Secret beziehungsweise geschützte Umgebungsvariable. **Noch ergänzen:** tatsächliche Variablennamen
-- Netzwerkzugriff / Sicherheitsgruppe: Zugriff nur vom Backend beziehungsweise dessen Netzwerk auf den MariaDB-Port (standardmässig 3306). **Noch ergänzen:** konkrete Sicherheitsgruppen-Regeln
-- Verbindungstest: **Noch ergänzen:** Testvorgehen und tatsächliches Ergebnis
+- RDS-Instanz: refcard05-mariadb, refcard05-mariadb.cp8mygeaofaq.us-east-1.rds.amazonaws.com
+- Datenbankname: refcard05-mariadb
+- Verbindungskonfiguration: Host, Port, Datenbankname und Benutzer; Kennwort als Secret beziehungsweise geschützte Umgebungsvariable. 
+- Netzwerkzugriff / Sicherheitsgruppe: Zugriff nur vom Backend beziehungsweise dessen Netzwerk auf den MariaDB-Port (standardmässig 3306).
 
 ![img.png](img.png)
 
@@ -128,22 +120,23 @@ Vorgesehen ist eine MariaDB-Instanz auf Amazon RDS in `us-east-1`. Das Backend e
 
 Der Bilder-Endpoint des Backends wird von lokaler Speicherung auf Amazon S3 umgestellt. Das Backend lädt Bilder in den Bucket hoch und ruft sie bei Bedarf ab. Der ECS-Backend-Task erhält eine IAM-Task-Rolle, deren Berechtigungen auf den benötigten Bucket und die tatsächlich erforderlichen Aktionen beschränkt sind.
 
-- S3-Bucket: **Noch ergänzen:** tatsächlicher Bucket-Name
-- Backend-Konfiguration: **Noch ergänzen:** Variablennamen beziehungsweise Konfigurationsstelle
-- IAM-Rolle / Task-Rolle: **Noch ergänzen:** verwendete Rolle und Zuordnung zur Backend-Task-Definition
-- Least-Privilege-Berechtigungen: nur die für den Bilder-Workflow erforderlichen Aktionen auf dem konkreten Bucket beziehungsweise dessen Objekten. **Noch ergänzen:** tatsächliche Aktionen und Resource-ARNs der Policy
-- Fehlerfall: Fehler bei fehlenden Berechtigungen oder S3-Ausfällen sollen nachvollziehbar behandelt werden. **Noch ergänzen:** Verhalten und getestetes Ergebnis
+- S3-Bucket: 
+![img_8.png](img_8.png)
+- Backend-Konfiguration
+- IAM-Rolle / Task-Rolle: 
+- Least-Privilege-Berechtigungen: nur die für den Bilder-Workflow erforderlichen Aktionen auf dem konkreten Bucket beziehungsweise dessen Objekten. 
+- Fehlerfall: Fehler bei fehlenden Berechtigungen oder S3-Ausfällen sollen nachvollziehbar behandelt werden. 
 
 ![img_1.png](img_1.png)
 
 ### 4.3 ECS-Services
 
 | Service | Container / Image | ECS-Service / Cluster | Health-Check |
-|---|---|---|---|
-| Frontend | nginx / Frontend-Image aus ECR | **Noch ergänzen:** Service- und Clustername | **Noch ergänzen:** Pfad und Ergebnis, falls konfiguriert |
-| Backend | Spring Boot / Backend-Image aus ECR | **Noch ergänzen:** Service- und Clustername | **Noch ergänzen:** Pfad und Ergebnis, falls konfiguriert |
+|---|---|-----------------------|--------------|
+| Frontend | nginx / Frontend-Image aus ECR | frontend-service      | erfolgreich  |
+| Backend | Spring Boot / Backend-Image aus ECR | biztrips-service      | erfolgreich  |
 
-Frontend und Backend laufen als zwei getrennte ECS-Services auf Fargate. Der Frontend-Service verwendet nginx, der Backend-Service Spring Boot. Die Image-Änderung soll für beide Services automatisiert ein Redeployment auslösen. **Noch ergänzen:** Cluster-/Service-Namen, Task-Definitionen, Ports, Ressourcen, Netzwerk-/Load-Balancer-Konfiguration, Health-Checks und der konkrete Mechanismus für den Redeploy.
+Frontend und Backend laufen als zwei getrennte ECS-Services auf Fargate. Der Frontend-Service verwendet nginx, der Backend-Service Spring Boot. Die Image-Änderung soll für beide Services automatisiert ein Redeployment auslösen.
 
 ![img_5.png](img_5.png)
 ## 5. Secrets und AWS Academy Learner Lab
@@ -155,9 +148,9 @@ Das Learner Lab stellt temporäre AWS-Zugangsdaten bereit. Diese werden als GitH
 | `AWS_ACCESS_KEY_ID` | GitHub Actions Secrets | Temporärer Zugriff der CI/CD-Workflows auf AWS |
 | `AWS_SECRET_ACCESS_KEY` | GitHub Actions Secrets | Temporärer Zugriff der CI/CD-Workflows auf AWS |
 | `AWS_SESSION_TOKEN` | GitHub Actions Secrets | Session-Token für temporäre Learner-Lab-Zugangsdaten |
-| RDS-Verbindungswerte | Geschützte ECS-/Anwendungskonfiguration | Verbindung des Backends mit RDS; **Noch ergänzen:** tatsächliche Variablennamen und Ablage |
+| RDS-Verbindungswerte | Geschützte ECS-/Anwendungskonfiguration | Verbindung des Backends mit RDS;  |
 
-Nach Beginn einer neuen Learner-Lab-Session werden die aktuellen Werte aus dem AWS-Details-Panel in den entsprechenden GitHub Secrets aktualisiert. Anschliessend wird der Workflow erneut ausgeführt und der Zugriff überprüft. **Noch ergänzen:** verwendeter Aktualisierungsprozess und Nachweis, dass keine Zugangsdaten im Repository oder in Screenshots offengelegt sind.
+Nach Beginn einer neuen Learner-Lab-Session werden die aktuellen Werte aus dem AWS-Details-Panel in den entsprechenden GitHub Secrets aktualisiert. Anschliessend wird der Workflow erneut ausgeführt und der Zugriff überprüft.
 
 **OIDC-Vergleich:** In einer Produktionsumgebung ist OIDC in der Regel vorzuziehen, weil GitHub Actions damit kurzlebige AWS-Berechtigungen beziehen kann, ohne dauerhaft gespeicherte AWS-Schlüssel zu benötigen. Im AWS Academy Learner Lab sind OIDC und das Erstellen eigener IAM-Rollen gemäss Aufgabenstellung nicht verfügbar; deshalb werden dort die temporären Lab-Zugangsdaten als Secrets genutzt.
 
@@ -241,3 +234,10 @@ Die individuelle Umsetzung soll über Commits, Pull Requests und Workflow-Läufe
 - **Compose hat einen klaren lokalen Zweck, aber noch nicht den vollständigen RefCard-05-Umfang:** Backend und Datenbank starten mit einem Health-Check sowie einem persistenten Upload-Volume. Die Frontend-Konfiguration und die gemeinsame Orchestrierung fehlen im aktuellen Backend-Repository.
 - **Konfiguration muss end-to-end konsistent geprüft werden:** Ein erfolgreiches Docker- oder Maven-Build sagt noch nichts über das ECS-Laufzeitverhalten aus. Besonders Datenbankvariablen, Secrets Manager-ARNs, Sicherheitsgruppen und Bucket-Berechtigungen müssen gemeinsam getestet werden.
 - **Geheimnisse müssen sichtbar geschützt bleiben:** Die Workflow-Datei verwendet Variablen und Secrets, enthält aber keine konkreten Schlüssel oder Kennwörter. Alle tatsächlichen Werte gehören in GitHub-Secrets beziehungsweise geschützte AWS-Konfiguration und nicht in Dokumentation oder Screenshots.
+
+
+![img_7.png](img_7.png)
+Website, wenn Backend nicht funktioniert, weil RDS nicht erreichbar ist.
+
+![img_6.png](img_6.png)
+Website, wenn Backend und Deployment funktioniert.
