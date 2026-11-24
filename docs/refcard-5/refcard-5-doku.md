@@ -166,16 +166,22 @@ Nach Beginn einer neuen Learner-Lab-Session werden die aktuellen Werte aus dem A
 ### Voraussetzungen
 
 - Docker Desktop oder Docker Engine mit Docker Compose
-- Zugriff auf die Frontend- und Backend-Repositories
-- Lokale Konfiguration für Frontend, Backend und MariaDB; Kennwörter nur lokal beziehungsweise über eine nicht versionierte `.env`-Datei setzen
-- **Noch ergänzen:** tatsächlich getestete Tool-Versionen und benötigte Variablennamen
+- Zugriff auf das Backend-Repository; für eine spätere vollständige Anwendung zusätzlich auf das Frontend-Repository
+- Java 21 wird für einen direkten lokalen Build benötigt; das Compose-Image führt den Maven-Build bereits in einem Multi-Stage-Dockerfile aus
+- Eine nicht versionierte `.env`-Datei im Verzeichnis `docker` mit einem Wert für `DB_PASSWORD`
+- Lokales `DB_PASSWORD` für MariaDB und phpMyAdmin; keine echten AWS-Zugangsdaten oder RDS-Passwörter in Git oder in der Compose-Datei speichern
+- Das aktuelle Setup verwendet für Bilder das lokale Volume `/app/uploads`; das S3-Profil wird nur in der ECS-Konfiguration aktiviert
 
 ### Starten
 
-1. Frontend-, Backend- und Compose-Verzeichnis klonen beziehungsweise bereitstellen.
-2. Die lokale Konfiguration anhand einer Beispiel-Konfiguration erstellen und lokale Werte setzen. Keine echten Zugangsdaten committen.
-3. Compose-Datei mit `docker compose up --build` starten, sofern sie im aktuellen Verzeichnis `compose.yaml` oder `docker-compose.yml` heisst. **Noch ergänzen:** tatsächlicher Dateipfad und getesteter Startbefehl.
-4. Warten, bis Frontend, Backend und MariaDB bereit sind; anschliessend die Anwendung im Browser öffnen und einen Backend-Aufruf sowie – falls unterstützt – den Bilder-Workflow testen. **Noch ergänzen:** tatsächliche URLs und Ergebnisse.
+1. Das Backend-Repository klonen und im Verzeichnis `docker` eine nicht versionierte `.env`-Datei mit `DB_PASSWORD=<lokales-Passwort>` erstellen.
+2. Aus dem Verzeichnis `docker` die Datei mit `docker compose up --build` starten. Die Compose-Datei liegt unter `docker/docker-compose.yml`.
+3. MariaDB verwendet den Datenbanknamen `db_biztrips`, den Benutzer `root` und das lokale `DB_PASSWORD`; der Health-Check wartet auf eine initialisierte InnoDB-Datenbank.
+4. Nach erfolgreicher Prüfung startet das Backend auf Port `8080` mit `SPRING_PROFILES_ACTIVE=mariadb` und verbindet sich über den Container-Namen `bbw-mariadb-trips-dev` auf Port `3306`.
+5. phpMyAdmin startet über den Health-Check erst nach MariaDB auf `http://localhost:8082`.
+6. Das Backend ist unter `http://localhost:8080` erreichbar. Eine vollständige Browser-Anwendung ist erst verfügbar, wenn das Frontend ergänzt und mit dem Backend verbunden wird.
+7. Das lokale Upload-Verzeichnis liegt unter dem Docker-Volume `uploads` und wird im Backend auf `/app/uploads` gemountet.
+8. **Noch auszutesten:** Tatsächlich verwendete Docker-Compose-Version, Java-/Docker-Versionen, Startprotokoll, REST-Aufruf und Screenshots der laufenden Container.
 
 ### Stoppen und Fehlerbehebung
 
@@ -183,29 +189,33 @@ Nach Beginn einer neuen Learner-Lab-Session werden die aktuellen Werte aus dem A
 - Logs anzeigen: `docker compose logs -f`
 - Häufiges Problem: Ist ein verwendeter Port bereits belegt, den belegenden Dienst beenden oder die Port-Zuordnung in der Compose-Konfiguration anpassen.
 
-Die Aufgabenstellung verlangt, Frontend, Backend und MariaDB gemeinsam lokal zu starten, sodass für die lokale Entwicklung kein AWS-Zugang nötig ist. **Noch ergänzen:** ob die Compose-Konfiguration lokale Images baut oder Registry-Images verwendet, wie MariaDB initialisiert wird, welche Ports verwendet werden und ob Startreihenfolge beziehungsweise Health-Checks konfiguriert sind.
+Die Aufgabenstellung verlangt, Frontend, Backend und MariaDB gemeinsam lokal zu starten, sodass für die lokale Entwicklung kein AWS-Zugang nötig ist.
 
-<!-- Noch ergänzen: Screenshot der laufenden Compose-Container und der lokal geöffneten Anwendung. -->
+- Die vorhandene Konfiguration baut das Backend lokal aus dem Repository-`Dockerfile`; MariaDB und phpMyAdmin verwenden öffentlich verfügbare Images.
+- Das MariaDB-Verzeichnis wird über `docker/database:/var/lib/mysql` persistent gemacht. Damit bleibt die Datenbank auch nach `docker compose down` erhalten, sofern das Verzeichnis nicht manuell gelöscht wird.
+- Das Backend wird erst gestartet, wenn MariaDB den Compose-Health-Check besteht. phpMyAdmin wartet zusätzlich auf den gleichen Gesundheitszustand.
+- Verwendete Ports: Backend `8080`, MariaDB `3306` und phpMyAdmin `8082`.
+- Die vollständige gemeinsame Konfiguration für das React/Vite-Frontend fehlt noch; sie muss nach Abschluss in dieselbe Compose-Datei beziehungsweise in ein separates Compose-Verzeichnis aufgenommen werden.
 
 ## 7. Tests und Funktionsnachweise
 
 | Bereich | Test / Vorgehen | Erwartetes und tatsächliches Ergebnis | Nachweis |
 |---|---|---|---|
-| Frontend | Pipeline-Build und -Tests; UI im Browser aufrufen | Laut Aufgabenstellung Teil der CI/CD-Pipeline; **tatsächliches Ergebnis noch ergänzen** | **Noch ergänzen:** Workflow-Link / Screenshot |
-| Backend | Pipeline-Build und -Tests; API-Endpunkt aufrufen | Laut Aufgabenstellung Teil der CI/CD-Pipeline; **tatsächliches Ergebnis noch ergänzen** | **Noch ergänzen:** Workflow-Link / Screenshot |
-| Datenbank | Verbindung des Backends mit RDS/MariaDB prüfen | **Noch ergänzen:** tatsächliches Ergebnis | **Noch ergänzen:** Log / Screenshot ohne Secrets |
-| Bilder | Bild über das Backend in S3 speichern und wieder abrufen | **Noch ergänzen:** tatsächliches Ergebnis | **Noch ergänzen:** Screenshot |
-| Deployment | Image aktualisieren, Redeployment und Service-Zustand prüfen | Automatisches Redeployment für beide Services ist gefordert; **tatsächliches Ergebnis noch ergänzen** | **Noch ergänzen:** Workflow-Link / Screenshot |
-| Lokal | Frontend, Backend und MariaDB mit Docker Compose starten | **Noch ergänzen:** tatsächliches Ergebnis | **Noch ergänzen:** Screenshot |
+| Frontend | Frontend-Pipeline ausführen und die Anwendung im Browser aufrufen | Das Frontend liegt in einem eigenen Repository; die konkrete Pipeline und ein Browser-Test müssen im Frontend-Repository ergänzt und verlinkt werden. Im aktuellen Backend-Repository ist kein Frontend-Test vorhanden. | Noch zu ergänzen: Workflow-Lauf aus dem Frontend-Repository |
+| Backend | Maven-Test und Maven-Package ausführen; REST-Endpunkte lokal beziehungsweise in ECS aufrufen | Die GitHub-Actions-Pipeline führt `./mvnw --batch-mode test` aus. Danach baut sie mit `clean package -DskipTests` ein Jar. Der ECS-Job baut daraus ein Docker-Image und startet ein Deployment; ein erfolgreicher Lauf muss mit dem GitHub-Run und einem API-Aufruf nachgewiesen werden. | `.github/workflows/deploy.yml`, `Dockerfile`, **noch zu ergänzen:** Workflow-Link und API-Antwort |
+| Datenbank | Backend mit der MariaDB-Konfiguration starten und einen Datenbankzugriff auslösen | Das Backend unterstützt über das Profil `mariadb` eine JDBC-Verbindung zu MariaDB. ECS erhält Host, Port und Datenbankname über Umgebungsvariablen und Benutzer sowie Passwort über Secrets Manager. Vor dem Nachweis müssen die Variablennamen konsistent auf `DB_USERNAME` beziehungsweise `DB_PASSWORD` gesetzt werden. | `src/main/resources/application-mariadb.properties`, `task-definition.json`, **noch zu ergänzen:** ECS-Log oder Screenshot ohne Secrets |
+| Bilder | Profilbild über einen Employee-Endpunkt hochladen, abrufen und löschen | Das S3-Profil aktiviert einen `S3ProfilePictureStorage`, der Dateien unter `employee-photos/` speichert und nur Schlüssel mit diesem Präfix zulässt. Die Policy-Vorlage erlaubt `GetObject`, `PutObject` und `DeleteObject`. Ein Bucket-Name, die ECS-Task-Rolle und ein erfolgreicher Upload müssen noch praktisch nachgewiesen werden. | `src/main/java/ch/bbw/trips/storage/S3ProfilePictureStorage.java`, `aws/s3-profile-photos-policy.json`, **noch zu ergänzen:** Bucket-Screenshot |
+| Deployment | Neue Backend-Image-Version pushen und ECS-Service stabilisieren lassen | Der Workflow pusht den Commit-SHA oder den Git-Tag nach ECR und ersetzt anschliessend das Backend-Image in der ECS-Task-Definition. Die ECR-Image-Version und der ECS-Service müssen nach einem Lauf auf die gleiche Revision geprüft werden. | `.github/workflows/deploy.yml`, `task-definition.json`, **noch zu ergänzen:** ECR- und ECS-Screenshot |
+| Lokal | `docker compose` für MariaDB und Backend starten | Die Compose-Konfiguration baut das Backend aus dem lokalen `Dockerfile`, startet MariaDB auf Port `3306` und das Backend auf Port `8080`. MariaDB muss über einen Health-Check gesund sein, bevor das Backend startet. Das Upload-Verzeichnis wird als Volume `/app/uploads` persistent gehalten; phpMyAdmin läuft zusätzlich auf Port `8082`. Das vollständige Frontend-Compose-Setup fehlt. | `docker/docker-compose.yml`, lokale URL `http://localhost:8080`, phpMyAdmin `http://localhost:8082`, **noch zu ergänzen:** Compose-Screenshot |
 
 ## 8. Individuelle Umsetzung und Nachvollziehbarkeit
 
-Die individuelle Umsetzung soll über Commits, Pull Requests und Workflow-Läufe in beiden Repositories nachvollziehbar sein. **Noch ergänzen:** konkrete Beiträge von Lorenz und Elias sowie Links auf die dazugehörigen Commits, Pull Requests und Workflows.
+Die individuelle Umsetzung soll über Commits, Pull Requests und Workflow-Läufe in beiden Repositories nachvollziehbar sein. 
 
 | Person | Beitrag | Commit / PR / Workflow |
 |---|---|---|
-| Lorenz | **Noch ergänzen:** konkret umgesetzte Aufgaben | **Noch ergänzen:** Commit-/PR-/Workflow-Links |
-| Elias | **Noch ergänzen:** konkret umgesetzte Aufgaben | **Noch ergänzen:** Commit-/PR-/Workflow-Links |
+| Lorenz | AWS | Erstellen der Sachen in AWS|
+| Elias | Github workflows | Github Workflows erstellt und dockerfile angepasst |
 
 ## 9. Herausforderungen und Erkenntnisse
 
